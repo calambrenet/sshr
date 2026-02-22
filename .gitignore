@@ -1,0 +1,16 @@
+/target
+*.swp
+*.swo
+*~
+.DS_Store
+.idea/
+.vscode/
+*.iml
+
+# Ignore all .md files except essential ones
+*.md
+!README.md
+!CHANGELOG.md
+!CONTRIBUTING.md
+!LICENSE-MIT
+!LICENSE-APACHE
