@@ -29,6 +29,19 @@ Thank you for your interest in contributing to sshr!
 - Keep pull requests focused — one feature or fix per PR
 - Update documentation if your change affects user-facing behavior
 
+## AI-generated code policy
+
+**Do not use AI code generators (LLMs, Copilot, ChatGPT, etc.) for your contributions.**
+
+This project is a learning space. We want to see *your* code — your thinking,
+your mistakes, your growth. That's how we all learn. A pull request full of
+AI-generated code teaches no one anything.
+
+We review contributions carefully. PRs that appear to be AI-generated will be
+closed without merge.
+
+Write it yourself. Make mistakes. Ask questions. Learn with us.
+
 ## Reporting bugs
 
 Open an issue at <https://github.com/calambrenet/sshr/issues> with:
