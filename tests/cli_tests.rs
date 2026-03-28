@@ -52,3 +52,12 @@ fn test_custom_config_path() {
         .assert();
     // Verificar que usa el fichero especificado
 }
+#[test]
+fn test_connect_help() {
+    Command::cargo_bin("sshr")
+        .unwrap()
+        .args(["connect", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Connect to an SSH host"));
+}
