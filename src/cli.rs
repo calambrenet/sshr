@@ -2,9 +2,8 @@ use clap::{Args, Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 /// sshr — A modern SSH connection manager
 ///
-/// Manage your SSH connections with style. Reads your existing
-/// ~/.ssh/config and extends it with fuzzy search, auditing,
-/// and intelligent connection management.
+/// Manage your SSH connections with style. Connect directly with
+/// `sshr <host>` or use subcommands for advanced features.
 #[derive(Parser, Debug)]
 #[command(
     name = "sshr",

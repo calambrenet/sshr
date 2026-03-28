@@ -36,10 +36,41 @@ fn test_list_alias() {
         .success();
 }
 #[test]
-fn test_unknown_subcommand() {
+fn test_implicit_connect() {
+    // "sshr nonexistent_host" se interpreta como "sshr connect nonexistent_host"
     Command::cargo_bin("sshr")
         .unwrap()
-        .arg("nonexistent")
+        .arg("nonexistent_host")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("conectando"));
+}
+#[test]
+fn test_implicit_connect_user_at_host() {
+    // "sshr root@host" se interpreta como "sshr connect root@host"
+    Command::cargo_bin("sshr")
+        .unwrap()
+        .arg("root@somehost")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("conectando"));
+}
+#[test]
+fn test_help_shows_main_help_not_connect() {
+    // --help sin subcomando debe mostrar la ayuda principal
+    Command::cargo_bin("sshr")
+        .unwrap()
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("SSH connection manager"));
+}
+#[test]
+fn test_invalid_format_value() {
+    // Un valor inválido para --format sigue siendo error de clap
+    Command::cargo_bin("sshr")
+        .unwrap()
+        .args(["--format=invalid", "list"])
         .assert()
         .failure()
         .stderr(predicate::str::contains("error"));
