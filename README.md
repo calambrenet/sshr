@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/calambrenet/sshr/actions/workflows/ci.yml/badge.svg)](https://github.com/calambrenet/sshr/actions/workflows/ci.yml)
 [![Crates.io](https://img.shields.io/crates/v/sshr.svg)](https://crates.io/crates/sshr)
-[![License](https://img.shields.io/crates/l/sshr.svg)](https://github.com/calambrenet/sshr#license)
+[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](https://github.com/calambrenet/sshr#license)
 
 **SSH Reimagined.** A modern SSH connection manager written in Rust.
 
