@@ -13,10 +13,7 @@ pub fn execute(cli: &Cli, args: &ListArgs) -> Result<()> {
 
     // Filter by tag if specified
     if !args.tag.is_empty() {
-        hosts.retain(|h| {
-            println!("Host {} tags: {:?}", h.name, h.tags);
-            args.tag.iter().any(|t| h.tags.contains(t))
-        });
+        hosts.retain(|h| args.tag.iter().any(|t| h.tags.contains(t)));
     }
 
     // Ordenar
