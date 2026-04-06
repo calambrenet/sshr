@@ -1,3 +1,5 @@
+pub mod color;
+
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
 /// Devuelve el directorio home del usuario, o `None` si no se puede determinar.

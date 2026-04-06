@@ -421,7 +421,7 @@ Host test
 ";
         let config = parse_ssh_config_str(content, None).unwrap();
         let path = config.hosts[0].identity_file.as_ref().unwrap();
-        // Debe haberse expandido ~ → $HOME
+        // Debe haberse expandido ~ -> $HOME
         assert!(!path.to_string_lossy().starts_with('~'));
     }
 

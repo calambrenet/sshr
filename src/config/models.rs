@@ -4,11 +4,13 @@
 
 use std::collections::HashMap;
 use std::path::PathBuf;
+use serde::{Serialize, Deserialize};
+use std::fmt;
 
 /// Regla de reenvío de puertos (local o remoto).
 ///
 /// Formato SSH: `[bind_address:]port:host:hostport`
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ForwardRule {
     pub bind_address: Option<String>,
     pub port: u16,
@@ -55,13 +57,24 @@ impl ForwardRule {
     }
 }
 
+impl fmt::Display for ForwardRule {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if self.bind_address.as_deref() == Some("localhost") {
+            write!(f, "{} {}:{}", self.port, self.host, self.port)
+        } else {
+            write!(f, "{}:{} {}:{}", self.bind_address.as_deref().unwrap_or("*"), self.port,
+                   self.host, self.port)
+        }
+    }
+}
+
 /// Representa un bloque Host del fichero ssh_config.
 ///
 /// Limitaciones conocidas:
 /// - Solo un `IdentityFile` por host (OpenSSH permite múltiples; eventualmente será `Vec<PathBuf>`)
 /// - Sin soporte para bloques `Match` (se ignoran silenciosamente)
 /// - Sin expansión de `~user/` (solo `~/`)
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Host {
     /// Nombre principal del host (primer patrón)
     pub name: String,
@@ -91,6 +104,10 @@ pub struct Host {
     pub server_alive_count_max: Option<u64>,
     /// Opciones adicionales no mapeadas explícitamente
     pub extra_options: HashMap<String, String>,
+
+    // Metadata adicional
+    #[serde(default)]
+    pub tags: Vec<String>,
 }
 
 impl Host {
@@ -110,6 +127,7 @@ impl Host {
             server_alive_interval: None,
             server_alive_count_max: None,
             extra_options: HashMap::new(),
+            tags: Vec::new(),
         }
     }
 

@@ -33,7 +33,7 @@ fn preprocess_args(args: &[String]) -> Vec<String> {
     while i < args.len() {
         let arg = &args[i];
 
-        // "--" → parar. NO marcar positional (host debe ir antes de --)
+        // "--" -> parar. NO marcar positional (host debe ir antes de --)
         if arg == "--" {
             break;
         }
