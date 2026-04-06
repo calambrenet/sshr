@@ -2,10 +2,10 @@
 
 #![allow(dead_code)]
 
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
-use serde::{Serialize, Deserialize};
 use std::fmt;
+use std::path::PathBuf;
 
 /// Port forwarding rule (local or remote).
 ///
@@ -62,8 +62,14 @@ impl fmt::Display for ForwardRule {
         if self.bind_address.as_deref() == Some("localhost") {
             write!(f, "{} {}:{}", self.port, self.host, self.port)
         } else {
-            write!(f, "{}:{} {}:{}", self.bind_address.as_deref().unwrap_or("*"), self.port,
-                   self.host, self.port)
+            write!(
+                f,
+                "{}:{} {}:{}",
+                self.bind_address.as_deref().unwrap_or("*"),
+                self.port,
+                self.host,
+                self.port
+            )
         }
     }
 }
