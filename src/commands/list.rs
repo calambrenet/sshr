@@ -16,7 +16,6 @@ pub fn execute(cli: &Cli, args: &ListArgs) -> Result<()> {
         hosts.retain(|h| args.tag.iter().any(|t| h.tags.contains(t)));
     }
 
-    // Ordenar
     sort_hosts(&mut hosts, args);
 
     if hosts.is_empty() {
