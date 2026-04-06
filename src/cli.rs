@@ -7,19 +7,19 @@ use std::path::PathBuf;
 #[derive(Parser, Debug)]
 #[command(
     name = "sshr",
-    version,                      // Usa la versión de Cargo.toml
-    about,                        // Usa el doc comment de arriba
+    version,                      // Uses the version from Cargo.toml
+    about,                        // Uses the doc comment above
     long_about = None,
-    arg_required_else_help = true, // Muestra ayuda si no hay argumentos
-    propagate_version = true,      // --version funciona en subcomandos
+    arg_required_else_help = true, // Show help if no arguments provided
+    propagate_version = true,      // --version works in subcommands
 )]
 pub struct Cli {
     /// Path to SSH config file
     #[arg(
-        short = 'F',              // -F (igual que ssh)
+        short = 'F',              // -F (same as ssh)
         long = "config-file",
-        global = true,             // Disponible en todos los subcomandos
-        env = "SSHR_CONFIG",      // También configurable por env var
+        global = true,             // Available in all subcommands
+        env = "SSHR_CONFIG",      // Also configurable via env var
         default_value = "~/.ssh/config"
     )]
     pub config_file: PathBuf,
@@ -37,14 +37,14 @@ pub struct Cli {
     #[command(subcommand)]
     pub command: Command,
 }
-/// Formatos de salida soportados
+/// Supported output formats
 #[derive(ValueEnum, Clone, Debug, PartialEq)]
 pub enum OutputFormat {
-    /// Salida formateada para humanos (por defecto)
+    /// Human-readable formatted output (default)
     Text,
-    /// JSON para scripting y pipes
+    /// JSON for scripting and pipes
     Json,
-    /// CSV para importar en hojas de cálculo
+    /// CSV for importing into spreadsheets
     Csv,
 }
 

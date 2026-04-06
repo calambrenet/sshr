@@ -1,18 +1,20 @@
+pub mod color;
+
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-/// Devuelve el directorio home del usuario, o `None` si no se puede determinar.
+/// Returns the user's home directory, or `None` if it cannot be determined.
 ///
-/// Usa `HOME` (Unix) con fallback a `USERPROFILE` (Windows).
+/// Uses `HOME` (Unix) with fallback to `USERPROFILE` (Windows).
 fn home_dir() -> Option<String> {
     std::env::var("HOME")
         .or_else(|_| std::env::var("USERPROFILE"))
         .ok()
 }
 
-/// Expande `~` al directorio home del usuario.
+/// Expands `~` to the user's home directory.
 ///
-/// Solo soporta `~/...` y `~` exacto. `~user/` se deja sin expandir
-/// (requeriría consultar `/etc/passwd` o similar).
+/// Only supports `~/...` and exact `~`. `~user/` is left unexpanded
+/// (would require querying `/etc/passwd` or similar).
 pub fn expand_tilde(path: &str) -> String {
     if path == "~" {
         return home_dir().unwrap_or_else(|| "~".to_string());

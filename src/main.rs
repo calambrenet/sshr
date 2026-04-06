@@ -9,16 +9,16 @@ use clap::{CommandFactory, Parser};
 
 use cli::{Cli, Command};
 
-/// Flags globales que consumen un valor separado por espacio.
+/// Global flags that consume a separate value.
 const GLOBAL_FLAGS_WITH_VALUE: &[&str] = &["-F", "--config-file", "--format"];
 
-/// Preprocesa argv para inyectar "connect" cuando se invoca sin subcomando.
+/// Preprocesses argv to inject "connect" when invoked without a subcommand.
 ///
-/// Si el primer argumento posicional (tras el binario y flags globales) no es
-/// un subcomando conocido, se interpreta como host destino y se inyecta
-/// "connect" en posición 1.
+/// If the first positional argument (after the binary and global flags) is not
+/// a known subcommand, it is interpreted as the target host and "connect" is
+/// injected at position 1.
 fn preprocess_args(args: &[String]) -> Vec<String> {
-    // Obtener subcomandos conocidos de clap (nombres + aliases + "help")
+    // Get known subcommands from clap (names + aliases + "help")
     let cmd = Cli::command();
     let known: std::collections::HashSet<&str> = cmd
         .get_subcommands()
@@ -33,14 +33,14 @@ fn preprocess_args(args: &[String]) -> Vec<String> {
     while i < args.len() {
         let arg = &args[i];
 
-        // "--" → parar. NO marcar positional (host debe ir antes de --)
+        // "--" -> stop. Do NOT mark as positional (host must come before --)
         if arg == "--" {
             break;
         }
 
         if arg.starts_with('-') {
             if GLOBAL_FLAGS_WITH_VALUE.contains(&arg.as_str()) && i + 1 < args.len() {
-                i += 2; // saltar flag + valor
+                i += 2; // skip flag + value
             } else {
                 i += 1;
             }
@@ -72,13 +72,13 @@ fn main() -> Result<()> {
     let args = preprocess_args(&raw_args);
     let mut cli = Cli::try_parse_from(&args).unwrap_or_else(|e| e.exit());
 
-    // Expandir ~ en la ruta de configuración (clap la recibe como literal)
+    // Expand ~ in the config path (clap receives it as a literal string)
     let config_str = cli.config_file.to_string_lossy().to_string();
     cli.config_file = PathBuf::from(utils::expand_tilde(&config_str));
 
     // Configurar colores globalmente
     if cli.no_color || std::env::var("NO_COLOR").is_ok() {
-        // Desactivamos colores (lo implementaremos después)
+        // Disable colors (to be implemented later)
     }
     match &cli.command {
         Command::List(args) => commands::list::execute(&cli, args),

@@ -7,10 +7,10 @@ use anyhow::{Context, Result, bail};
 use super::models::{ForwardRule, Host, SshConfig};
 use crate::utils::expand_tilde;
 
-/// Parsea un fichero ssh_config desde disco.
+/// Parses an ssh_config file from disk.
 ///
-/// Si el fichero no existe, devuelve una `SshConfig` vacía (ssh funciona sin config).
-/// Si el fichero existe pero no se puede leer, devuelve error.
+/// If the file does not exist, returns an empty `SshConfig` (ssh works without config).
+/// If the file exists but cannot be read, returns an error.
 pub fn parse_ssh_config(path: &Path) -> Result<SshConfig> {
     if !path.exists() {
         let mut config = SshConfig::new();
@@ -19,14 +19,14 @@ pub fn parse_ssh_config(path: &Path) -> Result<SshConfig> {
     }
 
     let content = std::fs::read_to_string(path)
-        .with_context(|| format!("No se pudo leer el fichero SSH config: {}", path.display()))?;
+        .with_context(|| format!("Could not read SSH config file: {}", path.display()))?;
 
     parse_ssh_config_str(&content, Some(path.to_path_buf()))
 }
 
-/// Parsea el contenido de un ssh_config desde un string.
+/// Parses ssh_config content from a string.
 ///
-/// Útil para testing sin necesidad de ficheros en disco.
+/// Useful for testing without needing files on disk.
 pub fn parse_ssh_config_str(content: &str, source_path: Option<PathBuf>) -> Result<SshConfig> {
     let mut config = SshConfig::new();
     config.source_path = source_path;
@@ -37,12 +37,12 @@ pub fn parse_ssh_config_str(content: &str, source_path: Option<PathBuf>) -> Resu
         let line_num = line_num + 1; // 1-indexed
         let trimmed = line.trim();
 
-        // Ignorar líneas vacías y comentarios
+        // Skip empty lines and comments
         if trimmed.is_empty() || trimmed.starts_with('#') {
             continue;
         }
 
-        // Parsear directiva
+        // Parse directive
         let (key, value) = match parse_directive(trimmed) {
             Some(kv) => kv,
             None => continue,
@@ -50,29 +50,29 @@ pub fn parse_ssh_config_str(content: &str, source_path: Option<PathBuf>) -> Resu
 
         let key_lower = key.to_lowercase();
 
-        // Directiva Include: warning a stderr (no soportada)
+        // Include directive: warn to stderr (not supported)
         if key_lower == "include" {
             eprintln!(
-                "sshr: advertencia: directiva 'Include' no soportada (línea {line_num}), se ignora"
+                "sshr: warning: 'Include' directive not supported (line {line_num}), skipping"
             );
             continue;
         }
 
-        // Directiva Match: se ignora silenciosamente
+        // Match directive: silently ignored
         if key_lower == "match" {
             continue;
         }
 
-        // Nuevo bloque Host
+        // New Host block
         if key_lower == "host" {
-            // Guardar host anterior
+            // Save previous host
             if let Some(host) = current_host.take() {
                 config.hosts.push(host);
             }
 
             let patterns: Vec<String> = value.split_whitespace().map(String::from).collect();
             if patterns.is_empty() {
-                bail!("Línea {line_num}: bloque Host sin nombre");
+                bail!("Line {line_num}: Host block without a name");
             }
 
             let name = patterns[0].clone();
@@ -80,17 +80,17 @@ pub fn parse_ssh_config_str(content: &str, source_path: Option<PathBuf>) -> Resu
             continue;
         }
 
-        // Aplicar directiva al host actual o a opciones globales
+        // Apply directive to current host or global options
         match current_host.as_mut() {
             Some(host) => apply_directive(host, &key_lower, &value, line_num)?,
             None => {
-                // Opciones globales (antes del primer Host)
+                // Global options (before the first Host block)
                 config.global_options.insert(key_lower, value);
             }
         }
     }
 
-    // No olvidar el último host
+    // Don't forget the last host
     if let Some(host) = current_host {
         config.hosts.push(host);
     }
@@ -98,24 +98,24 @@ pub fn parse_ssh_config_str(content: &str, source_path: Option<PathBuf>) -> Resu
     Ok(config)
 }
 
-/// Separa una línea de directiva en clave y valor.
+/// Splits a directive line into key and value.
 ///
-/// Soporta ambos formatos SSH:
-/// - `Key Value` (separado por espacio)
-/// - `Key=Value` (separado por `=`)
+/// Supports both SSH formats:
+/// - `Key Value` (space-separated)
+/// - `Key=Value` (`=`-separated)
 fn parse_directive(line: &str) -> Option<(String, String)> {
     let line = line.trim();
     if line.is_empty() {
         return None;
     }
 
-    // El key es el primer token (hasta espacio o =)
+    // The key is the first token (up to a space or =)
     match line.find(|c: char| c == '=' || c.is_whitespace()) {
         Some(key_end) => {
             let key = line[..key_end].to_string();
             let rest = line[key_end..].trim_start();
 
-            // Saltar separador '=' opcional
+            // Skip optional '=' separator
             let value = rest.strip_prefix('=').map_or(rest, |s| s.trim_start());
 
             if value.is_empty() {
@@ -124,12 +124,12 @@ fn parse_directive(line: &str) -> Option<(String, String)> {
 
             Some((key, value.to_string()))
         }
-        // Solo keyword, sin separador ni valor (e.g., "Host" sin nombre)
+        // Keyword only, no separator or value (e.g., "Host" without a name)
         None => Some((line.to_string(), String::new())),
     }
 }
 
-/// Aplica una directiva parseada a un Host.
+/// Applies a parsed directive to a Host.
 fn apply_directive(host: &mut Host, key: &str, value: &str, line_num: usize) -> Result<()> {
     match key {
         "hostname" => host.hostname = Some(value.to_string()),
@@ -138,7 +138,7 @@ fn apply_directive(host: &mut Host, key: &str, value: &str, line_num: usize) -> 
             host.port = Some(
                 value
                     .parse::<u16>()
-                    .with_context(|| format!("Línea {line_num}: puerto inválido '{value}'"))?,
+                    .with_context(|| format!("Line {line_num}: invalid port '{value}'"))?,
             );
         }
         "identityfile" => {
@@ -159,15 +159,15 @@ fn apply_directive(host: &mut Host, key: &str, value: &str, line_num: usize) -> 
         }
         "serveraliveinterval" => {
             host.server_alive_interval = Some(value.parse::<u64>().with_context(|| {
-                format!("Línea {line_num}: ServerAliveInterval inválido '{value}'")
+                format!("Line {line_num}: invalid ServerAliveInterval '{value}'")
             })?);
         }
         "serveralivecountmax" => {
             host.server_alive_count_max = Some(value.parse::<u64>().with_context(|| {
-                format!("Línea {line_num}: ServerAliveCountMax inválido '{value}'")
+                format!("Line {line_num}: invalid ServerAliveCountMax '{value}'")
             })?);
         }
-        // Opciones desconocidas se preservan en extra_options
+        // Unknown options are preserved in extra_options
         _ => {
             host.extra_options
                 .insert(key.to_string(), value.to_string());
@@ -176,12 +176,12 @@ fn apply_directive(host: &mut Host, key: &str, value: &str, line_num: usize) -> 
     Ok(())
 }
 
-/// Parsea un valor yes/no a bool.
+/// Parses a yes/no value to bool.
 fn parse_yes_no(value: &str, line_num: usize) -> Result<bool> {
     match value.to_lowercase().as_str() {
         "yes" => Ok(true),
         "no" => Ok(false),
-        _ => bail!("Línea {line_num}: se esperaba 'yes' o 'no', encontrado '{value}'"),
+        _ => bail!("Line {line_num}: expected 'yes' or 'no', got '{value}'"),
     }
 }
 
@@ -374,7 +374,7 @@ Host test
 ";
         let result = parse_ssh_config_str(content, None);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("puerto inválido"));
+        assert!(result.unwrap_err().to_string().contains("invalid port"));
     }
 
     #[test]
@@ -382,7 +382,7 @@ Host test
         let content = "Host\n    HostName 10.0.0.1";
         let result = parse_ssh_config_str(content, None);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("sin nombre"));
+        assert!(result.unwrap_err().to_string().contains("without a name"));
     }
 
     #[test]
@@ -421,7 +421,7 @@ Host test
 ";
         let config = parse_ssh_config_str(content, None).unwrap();
         let path = config.hosts[0].identity_file.as_ref().unwrap();
-        // Debe haberse expandido ~ → $HOME
+        // ~ should have been expanded to $HOME
         assert!(!path.to_string_lossy().starts_with('~'));
     }
 
@@ -451,22 +451,22 @@ Host web1 web2 web3
 
     #[test]
     fn test_parse_directive_formats() {
-        // Espacio simple
+        // Simple space
         let (k, v) = parse_directive("HostName 10.0.0.1").unwrap();
         assert_eq!(k, "HostName");
         assert_eq!(v, "10.0.0.1");
 
-        // Con =
+        // With =
         let (k, v) = parse_directive("HostName=10.0.0.1").unwrap();
         assert_eq!(k, "HostName");
         assert_eq!(v, "10.0.0.1");
 
-        // Con = y espacios
+        // With = and spaces
         let (k, v) = parse_directive("HostName = 10.0.0.1").unwrap();
         assert_eq!(k, "HostName");
         assert_eq!(v, "10.0.0.1");
 
-        // Valor con espacios (ProxyCommand)
+        // Value with spaces (ProxyCommand)
         let (k, v) = parse_directive("ProxyCommand ssh -W %h:%p gw").unwrap();
         assert_eq!(k, "ProxyCommand");
         assert_eq!(v, "ssh -W %h:%p gw");

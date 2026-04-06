@@ -10,11 +10,11 @@ use crate::config::models::Host;
 use crate::config::parser::parse_ssh_config;
 use crate::utils::expand_tilde;
 
-/// Construye los argumentos para el comando ssh.
+/// Builds the arguments for the ssh command.
 ///
-/// Recibe la ruta de configuración, los argumentos del subcomando, y la lista
-/// de hosts parseados. Devuelve el vector de argumentos y, opcionalmente,
-/// la referencia al Host encontrado en config.
+/// Takes the config path, subcommand arguments, and the list
+/// of parsed hosts. Returns the argument vector and, optionally,
+/// the reference to the Host found in config.
 pub fn build_ssh_args<'a>(
     config_path: &Path,
     args: &ConnectArgs,
@@ -22,7 +22,7 @@ pub fn build_ssh_args<'a>(
 ) -> (Vec<String>, Option<&'a Host>) {
     let mut ssh_args: Vec<String> = Vec::new();
 
-    // Config file override: si el usuario especificó una ruta distinta a la por defecto
+    // Config file override: if the user specified a path other than the default
     let config_str = config_path.to_string_lossy().to_string();
     let default_config = expand_tilde("~/.ssh/config");
     if config_str != default_config {
@@ -30,7 +30,7 @@ pub fn build_ssh_args<'a>(
         ssh_args.push(config_str);
     }
 
-    // Buscar el host en la configuración
+    // Look up the host in the configuration
     let host_entry = hosts
         .iter()
         .find(|h| h.name.to_lowercase() == args.host.to_lowercase());
@@ -41,7 +41,7 @@ pub fn build_ssh_args<'a>(
         ssh_args.push(port.to_string());
     }
 
-    // Verbosidad
+    // Verbosity
     match args.verbose {
         1 => ssh_args.push("-v".to_string()),
         2 => ssh_args.push("-vv".to_string()),
@@ -49,7 +49,7 @@ pub fn build_ssh_args<'a>(
         _ => {}
     }
 
-    // Host target (con posible override de user)
+    // Host target (with optional user override)
     let target = if let Some(ref user) = args.user {
         format!("{user}@{}", args.host)
     } else {
@@ -57,15 +57,15 @@ pub fn build_ssh_args<'a>(
     };
     ssh_args.push(target);
 
-    // Argumentos extra pasados tras --
+    // Extra arguments passed after --
     ssh_args.extend(args.ssh_args.iter().cloned());
 
     (ssh_args, host_entry)
 }
 
-/// Ejecuta ssh reemplazando el proceso actual (Unix).
+/// Executes ssh replacing the current process (Unix).
 ///
-/// En Unix, `exec()` reemplaza el proceso sshr por ssh — si tiene éxito, no retorna.
+/// On Unix, `exec()` replaces the sshr process with ssh — if successful, it never returns.
 #[cfg(unix)]
 fn exec_ssh(ssh_args: &[String]) -> Result<()> {
     use std::os::unix::process::CommandExt;
@@ -73,44 +73,44 @@ fn exec_ssh(ssh_args: &[String]) -> Result<()> {
     let mut cmd = Command::new("ssh");
     cmd.args(ssh_args);
 
-    // exec() reemplaza el proceso — si tiene éxito, no retorna
+    // exec() replaces the process — if successful, it never returns
     let err = cmd.exec();
-    Err(err).context("Error al ejecutar ssh")
+    Err(err).context("Failed to execute ssh")
 }
 
-/// Ejecuta ssh como proceso hijo (non-Unix fallback).
+/// Executes ssh as a child process (non-Unix fallback).
 #[cfg(not(unix))]
 fn exec_ssh(ssh_args: &[String]) -> Result<()> {
     let status = Command::new("ssh")
         .args(ssh_args)
         .status()
-        .context("Error al ejecutar ssh")?;
+        .context("Failed to execute ssh")?;
 
     std::process::exit(status.code().unwrap_or(1));
 }
 
 pub fn execute(cli: &Cli, args: &ConnectArgs) -> Result<()> {
-    // Parsear configuración SSH
+    // Parse SSH configuration
     let config = parse_ssh_config(&cli.config_file)?;
 
-    // Construir argumentos SSH
+    // Build SSH arguments
     let (ssh_args, host_entry) = build_ssh_args(&cli.config_file, args, &config.hosts);
 
-    // Mostrar info de conexión en stderr
+    // Print connection info to stderr
     if let Some(host) = host_entry {
         eprintln!(
-            "sshr: conectando a {} ({})",
+            "sshr: connecting to {} ({})",
             host.name,
             host.connection_string()
         );
     } else {
         eprintln!(
-            "sshr: conectando a {} (host no encontrado en config, usando ssh directamente)",
+            "sshr: connecting to {} (host not found in config, using ssh directly)",
             args.host
         );
     }
 
-    // Ejecutar ssh
+    // Execute ssh
     exec_ssh(&ssh_args)
 }
 
@@ -259,7 +259,7 @@ mod tests {
         args.ssh_args = vec!["-N".to_string()];
         let (ssh_args, _) = build_ssh_args(&default_config_path(), &args, &[]);
 
-        // El host debe estar antes de los extra args
+        // The host must come before the extra args
         let host_pos = ssh_args.iter().position(|a| a == "myhost").unwrap();
         let extra_pos = ssh_args.iter().position(|a| a == "-N").unwrap();
         assert!(host_pos < extra_pos);
