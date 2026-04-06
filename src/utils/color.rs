@@ -13,7 +13,7 @@ pub fn colors_enabled() -> bool {
     COLORS_ENABLED.load(Ordering::Relaxed)
 }
 
-/// Aplica estilo solo si los colores están habilitados
+/// Applies style only if colors are enabled
 fn styled(text: &str, style: Style) -> String {
     if colors_enabled() {
         style.paint(text).to_string()
@@ -22,7 +22,7 @@ fn styled(text: &str, style: Style) -> String {
     }
 }
 
-// Funciones semánticas de color
+// Semantic color functions
 pub fn host_name(text: &str) -> String {
     styled(text, Color::Cyan.bold())
 }

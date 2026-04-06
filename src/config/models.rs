@@ -7,9 +7,9 @@ use std::path::PathBuf;
 use serde::{Serialize, Deserialize};
 use std::fmt;
 
-/// Regla de reenvío de puertos (local o remoto).
+/// Port forwarding rule (local or remote).
 ///
-/// Formato SSH: `[bind_address:]port:host:hostport`
+/// SSH format: `[bind_address:]port:host:hostport`
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ForwardRule {
     pub bind_address: Option<String>,
@@ -19,9 +19,9 @@ pub struct ForwardRule {
 }
 
 impl ForwardRule {
-    /// Parsea una regla de reenvío desde el formato SSH.
+    /// Parses a forwarding rule from SSH format.
     ///
-    /// Formatos soportados:
+    /// Supported formats:
     /// - `port:host:hostport`
     /// - `bind_address:port:host:hostport`
     pub fn parse(s: &str) -> Option<ForwardRule> {
@@ -68,25 +68,25 @@ impl fmt::Display for ForwardRule {
     }
 }
 
-/// Representa un bloque Host del fichero ssh_config.
+/// Represents a Host block from the ssh_config file.
 ///
-/// Limitaciones conocidas:
-/// - Solo un `IdentityFile` por host (OpenSSH permite múltiples; eventualmente será `Vec<PathBuf>`)
-/// - Sin soporte para bloques `Match` (se ignoran silenciosamente)
-/// - Sin expansión de `~user/` (solo `~/`)
+/// Known limitations:
+/// - Only one `IdentityFile` per host (OpenSSH allows multiple; eventually will be `Vec<PathBuf>`)
+/// - No support for `Match` blocks (silently ignored)
+/// - No expansion of `~user/` (only `~/`)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Host {
-    /// Nombre principal del host (primer patrón)
+    /// Primary host name (first pattern)
     pub name: String,
-    /// Patrones del bloque Host (puede incluir wildcards)
+    /// Host block patterns (may include wildcards)
     pub patterns: Vec<String>,
-    /// Hostname o IP real
+    /// Real hostname or IP
     pub hostname: Option<String>,
-    /// Usuario SSH
+    /// SSH user
     pub user: Option<String>,
-    /// Puerto SSH
+    /// SSH port
     pub port: Option<u16>,
-    /// Fichero de clave privada
+    /// Private key file
     pub identity_file: Option<PathBuf>,
     /// ProxyJump host
     pub proxy_jump: Option<String>,
@@ -94,18 +94,18 @@ pub struct Host {
     pub proxy_command: Option<String>,
     /// ForwardAgent (yes/no)
     pub forward_agent: Option<bool>,
-    /// Reenvíos locales (LocalForward)
+    /// Local forwards (LocalForward)
     pub local_forwards: Vec<ForwardRule>,
-    /// Reenvíos remotos (RemoteForward)
+    /// Remote forwards (RemoteForward)
     pub remote_forwards: Vec<ForwardRule>,
-    /// ServerAliveInterval en segundos
+    /// ServerAliveInterval in seconds
     pub server_alive_interval: Option<u64>,
     /// ServerAliveCountMax
     pub server_alive_count_max: Option<u64>,
-    /// Opciones adicionales no mapeadas explícitamente
+    /// Additional options not explicitly mapped
     pub extra_options: HashMap<String, String>,
 
-    // Metadata adicional
+    // Additional metadata
     #[serde(default)]
     pub tags: Vec<String>,
 }
@@ -131,17 +131,17 @@ impl Host {
         }
     }
 
-    /// Devuelve el hostname efectivo (hostname configurado o el nombre del host).
+    /// Returns the effective hostname (configured hostname or the host name).
     pub fn effective_hostname(&self) -> &str {
         self.hostname.as_deref().unwrap_or(&self.name)
     }
 
-    /// Devuelve el puerto efectivo (configurado o 22 por defecto).
+    /// Returns the effective port (configured or 22 by default).
     pub fn effective_port(&self) -> u16 {
         self.port.unwrap_or(22)
     }
 
-    /// Devuelve el usuario efectivo (configurado o el usuario actual del sistema).
+    /// Returns the effective user (configured or the current system user).
     pub fn effective_user(&self) -> String {
         self.user.clone().unwrap_or_else(|| {
             std::env::var("USER")
@@ -150,14 +150,14 @@ impl Host {
         })
     }
 
-    /// Devuelve true si alguno de los patrones contiene wildcards (`*` o `?`).
+    /// Returns true if any of the patterns contains wildcards (`*` or `?`).
     pub fn is_pattern(&self) -> bool {
         self.patterns
             .iter()
             .any(|p| p.contains('*') || p.contains('?'))
     }
 
-    /// Devuelve la cadena de conexión en formato `user@hostname:port`.
+    /// Returns the connection string in `user@hostname:port` format.
     pub fn connection_string(&self) -> String {
         let user = self.effective_user();
         let hostname = self.effective_hostname();
@@ -170,14 +170,14 @@ impl Host {
     }
 }
 
-/// Configuración SSH completa parseada de un fichero.
+/// Full SSH configuration parsed from a file.
 #[derive(Debug)]
 pub struct SshConfig {
-    /// Opciones globales (antes del primer bloque Host)
+    /// Global options (before the first Host block)
     pub global_options: HashMap<String, String>,
-    /// Bloques Host parseados
+    /// Parsed Host blocks
     pub hosts: Vec<Host>,
-    /// Ruta del fichero fuente (si se parseó desde fichero)
+    /// Source file path (if parsed from a file)
     pub source_path: Option<PathBuf>,
 }
 
@@ -190,7 +190,7 @@ impl SshConfig {
         }
     }
 
-    /// Busca un host por nombre exacto (case-insensitive).
+    /// Finds a host by exact name (case-insensitive).
     pub fn find_host(&self, name: &str) -> Option<&Host> {
         let name_lower = name.to_lowercase();
         self.hosts
@@ -198,7 +198,7 @@ impl SshConfig {
             .find(|h| h.name.to_lowercase() == name_lower)
     }
 
-    /// Devuelve solo los hosts concretos (sin wildcards).
+    /// Returns only concrete hosts (without wildcards).
     pub fn concrete_hosts(&self) -> Vec<&Host> {
         self.hosts.iter().filter(|h| !h.is_pattern()).collect()
     }

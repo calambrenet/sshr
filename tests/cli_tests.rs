@@ -31,7 +31,7 @@ fn test_version_flag() {
 }
 #[test]
 fn test_list_alias() {
-    // "ls" debería funcionar igual que "list"
+    // "ls" should work the same as "list"
     assert_cmd::Command::from_std(sshr())
         .arg("ls")
         .assert()
@@ -39,25 +39,25 @@ fn test_list_alias() {
 }
 #[test]
 fn test_implicit_connect() {
-    // "sshr nonexistent_host" se interpreta como "sshr connect nonexistent_host"
+    // "sshr nonexistent_host" is interpreted as "sshr connect nonexistent_host"
     assert_cmd::Command::from_std(sshr())
         .arg("nonexistent_host")
         .assert()
         .failure()
-        .stderr(predicate::str::contains("conectando"));
+        .stderr(predicate::str::contains("connecting"));
 }
 #[test]
 fn test_implicit_connect_user_at_host() {
-    // "sshr root@host" se interpreta como "sshr connect root@host"
+    // "sshr root@host" is interpreted as "sshr connect root@host"
     assert_cmd::Command::from_std(sshr())
         .arg("root@somehost")
         .assert()
         .failure()
-        .stderr(predicate::str::contains("conectando"));
+        .stderr(predicate::str::contains("connecting"));
 }
 #[test]
 fn test_help_shows_main_help_not_connect() {
-    // --help sin subcomando debe mostrar la ayuda principal
+    // --help without a subcommand should show main help
     assert_cmd::Command::from_std(sshr())
         .arg("--help")
         .assert()
@@ -66,7 +66,7 @@ fn test_help_shows_main_help_not_connect() {
 }
 #[test]
 fn test_invalid_format_value() {
-    // Un valor inválido para --format sigue siendo error de clap
+    // An invalid value for --format is still a clap error
     assert_cmd::Command::from_std(sshr())
         .args(["--format=invalid", "list"])
         .assert()

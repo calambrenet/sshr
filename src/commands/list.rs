@@ -8,10 +8,10 @@ use anyhow::Result;
 pub fn execute(cli: &Cli, args: &ListArgs) -> Result<()> {
     let config = parse_ssh_config(&cli.config_file)?;
 
-    // Filtrar hosts concretos (sin wildcards)
+    // Filter to concrete hosts (no wildcards)
     let mut hosts: Vec<&Host> = config.concrete_hosts();
 
-    // Filtrar por tag si se especificó
+    // Filter by tag if specified
     if !args.tag.is_empty() {
         hosts.retain(|h| {
             println!("Host {} tags: {:?}", h.name, h.tags);
@@ -23,10 +23,10 @@ pub fn execute(cli: &Cli, args: &ListArgs) -> Result<()> {
     sort_hosts(&mut hosts, args);
 
     if hosts.is_empty() {
-        println!("{}", color::dimmed("No hay hosts configurados."));
+        println!("{}", color::dimmed("No hosts configured."));
         println!(
             "{}",
-            color::dimmed("Usa 'sshm add <nombre> <hostname>' para añadir uno.")
+            color::dimmed("Use 'sshr add <name> <hostname>' to add one.")
         );
         return Ok(());
     }
@@ -54,13 +54,13 @@ fn sort_hosts(hosts: &mut [&Host], args: &ListArgs) {
             SortField::Hostname => a.effective_hostname().cmp(b.effective_hostname()),
             SortField::User => a.effective_user().cmp(&b.effective_user()),
             SortField::Port => a.effective_port().cmp(&b.effective_port()),
-            SortField::LastUsed => std::cmp::Ordering::Equal, // TODO: falta por implementar
+            SortField::LastUsed => std::cmp::Ordering::Equal, // TODO: not yet implemented
         };
         if args.reverse { cmp.reverse() } else { cmp }
     });
 }
 
-/// Rellena un string coloreado con espacios hasta alcanzar `width` caracteres visibles.
+/// Pads a colored string with spaces to reach `width` visible characters.
 fn pad_right(colored: String, visible_len: usize, width: usize) -> String {
     if visible_len >= width {
         colored
@@ -70,7 +70,7 @@ fn pad_right(colored: String, visible_len: usize, width: usize) -> String {
 }
 
 fn print_table(hosts: &[&Host]) {
-    // Calcular anchos de columna basados en longitud visible (sin códigos ANSI)
+    // Calculate column widths based on visible length (without ANSI codes)
     let name_width = hosts.iter().map(|h| h.name.len()).max().unwrap_or(4).max(4);
     let host_width = hosts
         .iter()
@@ -79,7 +79,7 @@ fn print_table(hosts: &[&Host]) {
         .unwrap_or(8)
         .max(8);
 
-    // Cabecera — los códigos ANSI no afectan al padding porque usamos pad_right
+    // Header — ANSI codes don't affect padding because we use pad_right
     println!(
         "  {}  {}  {:>5}  {}",
         pad_right(color::header("NAME"), 4, name_width),
@@ -97,7 +97,7 @@ fn print_table(hosts: &[&Host]) {
         color::dimmed("────────"),
     );
 
-    // Filas
+    // Rows
     for host in hosts {
         let port_str = host.effective_port().to_string();
         let user = host.effective_user();
@@ -115,7 +115,7 @@ fn print_table(hosts: &[&Host]) {
         );
     }
 
-    // Resumen
+    // Summary
     println!("\n{}", color::dimmed(&format!("{} hosts", hosts.len())));
 }
 
